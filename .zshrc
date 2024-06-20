@@ -271,6 +271,43 @@ source ~/powerlevel10k/powerlevel10k.zsh-theme
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
+## Establish "cdaprod" User
+# Ensure necessary groups for the user
+
+# Define the groups to check and create
+groups_to_ensure=(
+  "sudo"
+  "docker"
+  "adm"
+  "video"
+  "audio"
+  "plugdev"
+  "lpadmin"
+)
+
+# Function to check and create groups
+ensure_group() {
+  group_name=$1
+  if ! getent group "$group_name" >/dev/null; then
+    echo "Group $group_name does not exist. Creating it..."
+    sudo groupadd "$group_name"
+  fi
+  if ! groups $USER | grep -q "\b$group_name\b"; then
+    echo "Adding $USER to group $group_name..."
+    sudo usermod -aG "$group_name" $USER
+  fi
+}
+
+# Loop through the groups and ensure each one
+for group in "${groups_to_ensure[@]}"; do
+  ensure_group "$group"
+done
+
+# Inform the user to re-login for group changes to take effect
+if [ -n "$PS1" ]; then
+  echo "If any groups were added, please log out and log back in for changes to take effect."
+fi
+
 # Start ssh-agent if not running
 if ! pgrep -u "$(whoami)" ssh-agent > /dev/null; then
     eval "$(ssh-agent -s)"
