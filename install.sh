@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Clone the repository
-git clone https://github.com/yourusername/shell-config.git ~/shell-config
+git clone --recurse-submodules https://github.com/Cdaprod/cda.shell-config.git ~/shell-config
 
 # Copy the configuration files
 cp ~/shell-config/.zshrc ~/
