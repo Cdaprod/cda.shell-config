@@ -272,14 +272,30 @@ source ~/powerlevel10k/powerlevel10k.zsh-theme
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 # Start ssh-agent if not running
-if ! pgrep -q -u "$USER" ssh-agent; then
+if ! pgrep -u "$(whoami)" ssh-agent > /dev/null; then
     eval "$(ssh-agent -s)"
 fi
 
-# Add your SSH key if not already added
-if ! ssh-add -l >/dev/null 2>&1; then
-    ssh-add ~/.ssh/id_ed25519
+# Function to add SSH key if not already added
+add_ssh_key() {
+    local key_path="$1"
+    if [ -f "$key_path" ] && ! ssh-add -l 2>/dev/null | grep -q "$(ssh-keygen -lf "$key_path" | awk '{print $2}')"; then
+        ssh-add "$key_path"
+    fi
+}
+
+# Set user and hostname variables
+user=$(whoami)
+hostname=$(hostname)
+key_path="$HOME/.ssh/id_ed25519_${user}_${hostname}"
+
+# Generate SSH key if it does not exist
+if [ ! -f "$key_path" ]; then
+    ssh-keygen -t ed25519 -C "cdaprod@cdaprod.dev" -f "$key_path" -N ""
 fi
+
+# Add the SSH key
+add_ssh_key "$key_path"
 
 test -e "$HOME/.shellfishrc" && source "$HOME/.shellfishrc"
 autoload -U compinit; compinit
